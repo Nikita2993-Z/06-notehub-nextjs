@@ -7,7 +7,7 @@ import { fetchNotes } from "../../lib/api";
 import { useEffect, useState } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import NoteModal from "../../components/NoteModal/NoteModal";
-import SearchBox from "../../components/SearchBar/SearchBox";
+import SearchBox from "../../components/SearchBox/SearchBox";
 import { useDebounce } from "use-debounce";
 import { PropagateLoader } from "react-spinners";
 import ErrorMessage from "../../components/ErrorMessage/ErrorMessage";
