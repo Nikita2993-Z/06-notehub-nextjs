@@ -1,33 +1,75 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { fetchNoteById } from '../../lib/api/index';
-import type { Note } from '../../types/note';
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { fetchNoteById } from "../../lib/api";
+import css from "./NoteDetails.module.css";
 
+export default function NoteDetailsClient() {
+  const params = useParams();
+  const idParam = params?.id;
+  const id = Number(idParam);
 
-interface Props {
-  id: number;
-}
+  const isValidId = !isNaN(id) && id > 0;
 
-export default function NoteDetailsClient({ id }: Props) {
-  const { data: note, isLoading, error } = useQuery<Note>({
-    queryKey: ['note', id],
+  const {
+    data: note,
+    isLoading,
+    error,
+    isSuccess,
+    isError,
+  } = useQuery({
+    queryKey: ["note", id],
     queryFn: () => fetchNoteById(id),
+    enabled: isValidId, 
+    refetchOnMount: false,
   });
 
-  if (isLoading) return <p>Loading, please wait...</p>;
-  if (error || !note) return <p>Something went wrong.</p>;
+  if (!isValidId) {
+    return (
+      <p className={css.errorMessage}>
+        Invalid note ID: <code>{String(idParam)}</code>
+      </p>
+    );
+  }
+
+  if (isError) throw error;
+
+  const formatDate = (isoDate: string): string => {
+    const date = new Date(isoDate);
+    return date.toLocaleString("uk-UA", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <h2>{note.title}</h2>
-          <button>Edit note</button>
+    <div>
+      {isLoading && <p className={css.loadMessage}>Loading, please wait...</p>}
+
+      {!error && !note && !isLoading && (
+        <p className={css.errorMessage}>Note not found.</p>
+      )}
+
+      {note && isSuccess && (
+        <div className={css.container}>
+          <div className={css.item}>
+            <div className={css.header}>
+              <h2>{note.title}</h2>
+              <button className={css.editBtn}>Edit note</button>
+            </div>
+            <p className={css.content}>{note.content}</p>
+            <p className={css.date}>
+              {note.updatedAt
+                ? `Updated at: ${formatDate(note.updatedAt)}`
+                : `Created at: ${formatDate(note.createdAt)}`}
+            </p>
+          </div>
         </div>
-        <p>{note.content}</p>
-        <p>{new Date(note.createdAt).toLocaleDateString()}</p>
-      </div>
+      )}
     </div>
   );
 }

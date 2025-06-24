@@ -1,9 +1,10 @@
+
 import cssStyles from "./NoteList.module.css";
 import type { Note } from "../../types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteNote } from "../../lib/api"; 
-import { PropagateLoader } from "react-spinners";
-import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import { deleteNote } from "../../lib/api";
+import Loading from "@/app/loading";
+import ErrorMessage from "../../components/ErrorMessage/ErrorMessage";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -44,26 +45,14 @@ export default function NoteList({ notes }: NoteListProps) {
               <p className={cssStyles.content}>{note.content}</p>
               <div className={cssStyles.footer}>
                 <span className={cssStyles.tag}>{note.tag}</span>
-
-                <Link href={`/notes/${note.id}`} className={cssStyles.viewLink}>
-                  View details
-                </Link>
-
+                <Link href={`/notes/${note.id}`} className={cssStyles.link}>View details</Link>
                 <button
                   className={cssStyles.button}
                   onClick={() => handleDelete(note.id)}
                   disabled={deletingNoteId === note.id}
                 >
                   {deletingNoteId !== note.id ? "Delete" : "In progress"}
-                  {deletingNoteId === note.id && (
-                    <PropagateLoader
-                      color="#0d6efd"
-                      cssOverride={{}}
-                      loading
-                      size={9}
-                      speedMultiplier={1}
-                    />
-                  )}
+                  {deletingNoteId === note.id && <Loading />}
                 </button>
               </div>
             </li>

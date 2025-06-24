@@ -1,4 +1,4 @@
-import css from "./SearchBox.module.css";
+import css from "./SearchBar.module.css";
 
 interface SearchBoxProps {
   onChange: (query: string) => void;

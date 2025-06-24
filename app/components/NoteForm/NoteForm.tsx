@@ -1,86 +1,124 @@
-'use client';
+import css from "./NoteForm.module.css";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "../../lib/api";
+import ErrorMessageText from "../ErrorMessage/ErrorMessage"; 
+import { AxiosError } from "axios";
 
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createNote } from '../../lib/api/index';
-import type { createNoteValues } from '../../lib/api/index';
-import css from './NoteForm.module.css';
 
 interface NoteFormProps {
   onClose: () => void;
 }
 
+
+interface NoteFormValues {
+  title: string;
+  content: string; 
+  tag: "Work" | "Personal" | "Meeting" | "Shopping" | "Todo";
+}
+
+
+const initialValues: NoteFormValues = {
+  title: "",
+  content: "", 
+
+  tag: "Todo",
+};
+
+
+const Schema = Yup.object().shape({
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Title must be at least 3 characters")
+    .max(50, "Title is too long"),
+  content: Yup.string().max(500, "Content is too long"),
+  tag: Yup.string()
+    .oneOf(
+      ["Todo", "Work", "Personal", "Meeting", "Shopping"],
+      "Invalid tag value"
+    )
+    .required("Tag is required"),
+});
+
 export default function NoteForm({ onClose }: NoteFormProps) {
   const queryClient = useQueryClient();
 
+ 
   const mutation = useMutation({
-    mutationFn: createNote,
+    mutationFn: async (task: NoteFormValues) => createNote(task),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
       onClose();
     },
-    onError: (error) => {
-      alert('Failed to create note: ' + (error as Error).message);
-    },
   });
 
-  const formik = useFormik<createNoteValues>({
-    initialValues: {
-      title: '',
-      content: '',
-      tag: 'Personal',
-    },
-    validationSchema: Yup.object({
-      title: Yup.string().required('Title is required'),
-    }),
-    onSubmit: (values) => mutation.mutate(values),
-  });
+  const { isPending, isError, error } = mutation;
+
+  const handleCreateTask = (values: NoteFormValues) => {
+    mutation.mutate(values); 
+  };
 
   return (
-    <form className={css.form} onSubmit={formik.handleSubmit}>
-      <label className={css.label}>
-        Title
-        <input
-          className={css.input}
-          name="title"
-          value={formik.values.title}
-          onChange={formik.handleChange}
-        />
-        {formik.errors.title && formik.touched.title && (
-          <div className={css.error}>{formik.errors.title}</div>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={Schema}
+      onSubmit={handleCreateTask}
+    >
+      <Form className={css.form}>
+        <div className={css.formGroup}>
+          <label htmlFor="title">Title</label>
+          <Field id="title" type="text" name="title" className={css.input} />
+          <ErrorMessage name="title" component="span" className={css.error} />
+        </div>
+
+        <div className={css.formGroup}>
+          <label htmlFor="content">Content</label>
+          <Field
+            as="textarea"
+            id="content"
+            name="content"
+            rows={8}
+            className={css.textarea}
+          />
+          <ErrorMessage name="content" component="span" className={css.error} />
+        </div>
+
+        <div className={css.formGroup}>
+          <label htmlFor="tag">Tag</label>
+          <Field as="select" id="tag" name="tag" className={css.select}>
+            <option value="Todo">Todo</option>
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Shopping">Shopping</option>
+          </Field>
+          <ErrorMessage name="tag" component="span" className={css.error} />
+        </div>
+
+        <div className={css.actions}>
+          <button type="button" className={css.cancelButton} onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={css.submitButton}
+            disabled={isPending}
+          >
+            {!isPending ? "Create note" : "Loading..."}
+          </button>
+        </div>
+
+        {isError && (
+          <ErrorMessageText
+            message={
+              error instanceof AxiosError
+                ? error.response?.data?.message || "Something went wrong"
+                : "An unknown error occurred"
+            }
+          />
         )}
-      </label>
-
-      <label className={css.label}>
-        Content
-        <textarea
-          className={css.textarea}
-          name="content"
-          value={formik.values.content}
-          onChange={formik.handleChange}
-        />
-      </label>
-
-      <label className={css.label}>
-        Tag
-        <select
-          className={css.select}
-          name="tag"
-          value={formik.values.tag}
-          onChange={formik.handleChange}
-        >
-          <option value="Personal">Personal</option>
-          <option value="Work">Work</option>
-          <option value="Meeting">Meeting</option>
-          <option value="Shopping">Shopping</option>
-          <option value="Todo">Todo</option>
-        </select>
-      </label>
-
-      <button className={css.submitBtn} type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Creating...' : 'Create note'}
-      </button>
-    </form>
+      </Form>
+    </Formik>
   );
 }
