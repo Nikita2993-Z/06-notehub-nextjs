@@ -1,8 +1,8 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import TanStackProvider from "./components/TanStackProvider/TanStackProvider";
-import Header from "./components/Header/Header";
-import Footer from "./components/Footer/Footer";
+import TanStackProvider from "../components/TanStackProvider/TanStackProvider";
+import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
 
 export const metadata: Metadata = {
   title: "NoteHub",
