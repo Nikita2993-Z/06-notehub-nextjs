@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { fetchNoteById } from "../../lib/api";
-import css from "./NoteDetails.module.css";
+import styles from "./NoteDetails.module.css";
 
 export default function NoteDetailsClient() {
   const params = useParams();
@@ -27,7 +27,7 @@ export default function NoteDetailsClient() {
 
   if (!isValidId) {
     return (
-      <p className={css.errorMessage}>
+      <p className={styles.errorMessage}>
         Invalid note ID: <code>{String(idParam)}</code>
       </p>
     );
@@ -48,21 +48,21 @@ export default function NoteDetailsClient() {
 
   return (
     <div>
-      {isLoading && <p className={css.loadMessage}>Loading, please wait...</p>}
+      {isLoading && <p className={styles.loadMessage}>Loading, please wait...</p>}
 
       {!error && !note && !isLoading && (
-        <p className={css.errorMessage}>Note not found.</p>
+        <p className={styles.errorMessage}>Note not found.</p>
       )}
 
       {note && isSuccess && (
-        <div className={css.container}>
-          <div className={css.item}>
-            <div className={css.header}>
+        <div className={styles.container}>
+          <div className={styles.item}>
+            <div className={styles.header}>
               <h2>{note.title}</h2>
-              <button className={css.editBtn}>Edit note</button>
+              <button className={styles.editBtn}>Edit note</button>
             </div>
-            <p className={css.content}>{note.content}</p>
-            <p className={css.date}>
+            <p className={styles.content}>{note.content}</p>
+            <p className={styles.date}>
               {note.updatedAt
                 ? `Updated at: ${formatDate(note.updatedAt)}`
                 : `Created at: ${formatDate(note.createdAt)}`}
